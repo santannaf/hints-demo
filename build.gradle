@@ -1,0 +1,107 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.graalvm.buildtools.native' version '0.11.5'
+    id 'com.github.davidmc24.gradle.plugin.avro' version '1.9.1'
+}
+
+group = 'santannaf.hints.demo'
+version = '0.0.1'
+description = 'hints-demo'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    // Spring Web Server Tomcat
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+    // Spring Data Providers
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Spring Observability
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
+
+    // Specify Jakarta EE
+    implementation 'jakarta.inject:jakarta.inject-api:2.0.1'
+
+    // Driver Connection Database
+//    runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Library Common Custom Kafka, Serialization and Deserialization
+    implementation 'com.tanna.spring:kafka:1.0.0'
+    implementation 'org.apache.avro:avro:1.12.1'
+
+    // Unit Tests
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-opentelemetry-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Testcontainers
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
+    testImplementation 'org.testcontainers:testcontainers-oracle-free'
+    testImplementation 'com.redis:testcontainers-redis'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+bootJar {
+    archiveFileName = 'hints.jar'
+    mainClass = 'santannaf.hints.demo.HintsDemoApplication'
+}
+
+tasks.register("runCustomJar", Exec) {
+    group = "application"
+    dependsOn("jar")
+
+    def app = "hints.jar"
+    def appAddress = "./build/libs/$app"
+
+    commandLine(
+            "java",
+            "-agentlib:native-image-agent=config-merge-dir=./src/main/resources/META-INF/native-image/",
+            "-jar",
+            appAddress
+    )
+}
+
+graalvmNative {
+    binaries {
+        named('main') {
+            imageName = 'hints'
+            mainClass = 'santannaf.hints.demo.HintsDemoApplication'
+//            configurationFileDirectories.from(file("src/main/resources/META-INF/native-image"))
+//            verbose = true
+//            debug = true
+            buildArgs.addAll(
+                    '--color=always',
+//                    '-O3',
+//                    '-march=native',
+                    '-R:MinHeapSize=128m',
+                    '-R:MaxHeapSize=512m',
+                    '-H:+AddAllCharsets'
+            )
+        }
+    }
+}
+

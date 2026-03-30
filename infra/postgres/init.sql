@@ -1,0 +1,8 @@
+CREATE SCHEMA IF NOT EXISTS posts;
+
+CREATE TABLE posts.posts (
+    id BIGINT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL
+);
