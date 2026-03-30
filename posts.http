@@ -1,3 +1,2 @@
 ### Get All Posts
 GET http://localhost:8080/posts
-###

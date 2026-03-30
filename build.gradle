@@ -90,13 +90,9 @@ graalvmNative {
         named('main') {
             imageName = 'hints'
             mainClass = 'santannaf.hints.demo.HintsDemoApplication'
-//            configurationFileDirectories.from(file("src/main/resources/META-INF/native-image"))
-//            verbose = true
-//            debug = true
+            verbose = true
             buildArgs.addAll(
                     '--color=always',
-//                    '-O3',
-//                    '-march=native',
                     '-R:MinHeapSize=128m',
                     '-R:MaxHeapSize=512m',
                     '-H:+AddAllCharsets'
@@ -104,4 +100,3 @@ graalvmNative {
         }
     }
 }
-
